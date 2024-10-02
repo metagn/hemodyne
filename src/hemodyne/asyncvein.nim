@@ -9,8 +9,12 @@ import stringresize
 
 type AsyncVein* = object
   buffer*: string
+    ## buffer string, users need to access directly & keep track of position
   bufferLoader*: proc (): Future[string]
+    ## loads a string at a time to add to the buffer when needed
+    ## set to nil after returning empty string
   freeBefore*: int
+    ## position before which we can cull the buffer
 
 proc initAsyncVein*(buffer: string = "", loader: proc (): Future[string] = nil): AsyncVein {.inline.} =
   AsyncVein(buffer: buffer, bufferLoader: loader)
