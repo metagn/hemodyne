@@ -18,6 +18,9 @@ proc initVein*(loader: proc (): string): Vein {.inline.} =
 proc setFreeBefore*(r: var Vein, freeBefore: int) {.inline.} =
   r.freeBefore = freeBefore
 
+proc resetFreeBefore*(r: var Vein) {.inline.} =
+  r.freeBefore = 0
+
 proc extendBufferOne*(r: var Vein): int =
   result = 0
   if not r.bufferLoader.isNil:

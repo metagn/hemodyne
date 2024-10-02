@@ -25,6 +25,9 @@ proc initAsyncVein*(loader: proc (): Future[string]): AsyncVein {.inline.} =
 proc setFreeBefore*(r: var AsyncVein, freeBefore: int) {.inline.} =
   r.freeBefore = freeBefore
 
+proc resetFreeBefore*(r: var AsyncVein) {.inline.} =
+  r.freeBefore = 0
+
 proc extendBufferOne*(r: var AsyncVein): Future[int] {.async.} =
   result = 0
   if not r.bufferLoader.isNil:
