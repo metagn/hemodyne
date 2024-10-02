@@ -9,7 +9,7 @@ type Vein* = object
   freeBefore*: int
     ## position before which we can cull the buffer
 
-proc initVein*(buffer: string = "", loader: proc (): string = nil): Vein {.inline.} =
+proc initVein*(buffer: sink string = "", loader: proc (): string = nil): Vein {.inline.} =
   Vein(buffer: buffer, bufferLoader: loader)
 
 proc setFreeBefore*(r: var Vein, freeBefore: int) {.inline.} =

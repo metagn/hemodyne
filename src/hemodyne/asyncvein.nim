@@ -16,7 +16,7 @@ type AsyncVein* = object
   freeBefore*: int
     ## position before which we can cull the buffer
 
-proc initAsyncVein*(buffer: string = "", loader: proc (): Future[string] = nil): AsyncVein {.inline.} =
+proc initAsyncVein*(buffer: sink string = "", loader: proc (): Future[string] = nil): AsyncVein {.inline.} =
   AsyncVein(buffer: buffer, bufferLoader: loader)
 
 proc setFreeBefore*(r: var AsyncVein, freeBefore: int) {.inline.} =
