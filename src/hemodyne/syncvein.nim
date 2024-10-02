@@ -12,6 +12,9 @@ type Vein* = object
 proc initVein*(buffer: sink string = "", loader: proc (): string = nil): Vein {.inline.} =
   Vein(buffer: buffer, bufferLoader: loader)
 
+proc initVein*(loader: proc (): string): Vein {.inline.} =
+  Vein(buffer: "", bufferLoader: loader)
+
 proc setFreeBefore*(r: var Vein, freeBefore: int) {.inline.} =
   r.freeBefore = freeBefore
 

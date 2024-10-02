@@ -19,6 +19,9 @@ type AsyncVein* = object
 proc initAsyncVein*(buffer: sink string = "", loader: proc (): Future[string] = nil): AsyncVein {.inline.} =
   AsyncVein(buffer: buffer, bufferLoader: loader)
 
+proc initAsyncVein*(loader: proc (): Future[string]): AsyncVein {.inline.} =
+  AsyncVein(buffer: "", bufferLoader: loader)
+
 proc setFreeBefore*(r: var AsyncVein, freeBefore: int) {.inline.} =
   r.freeBefore = freeBefore
 
