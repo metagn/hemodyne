@@ -15,6 +15,9 @@ type AsyncVein* = object
 proc initAsyncVein*(buffer: string = "", loader: proc (): Future[string] = nil): AsyncVein {.inline.} =
   AsyncVein(buffer: buffer, bufferLoader: loader)
 
+proc setFreeBefore*(r: var AsyncVein, freeBefore: int) {.inline.} =
+  r.freeBefore = freeBefore
+
 proc extendBufferOne*(r: var AsyncVein): Future[int] {.async.} =
   result = 0
   if not r.bufferLoader.isNil:
@@ -40,3 +43,22 @@ proc extendBufferBy*(r: var AsyncVein, n: int): Future[int] {.async.} =
       if r.buffer.smartResizeAdd(ex, r.freeBefore) and r.freeBefore != 0:
         result = r.freeBefore
         r.freeBefore = 0
+
+proc extendBufferRuneStart*(r: var AsyncVein, c: char): Future[int] {.async.} =
+  result = 0
+  let b = byte(c)
+  if (b and 0b10000000) != 0:
+    var n = 0
+    if b shr 5 == 0b110:
+      n = 1
+    elif b shr 4 == 0b1110:
+      n = 2
+    elif b shr 3 == 0b11110:
+      n = 3
+    elif b shr 2 == 0b111110:
+      n = 4
+    elif b shr 1 == 0b1111110:
+      n = 5
+    else:
+      return
+    result = await extendBufferBy(r, n)
