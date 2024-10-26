@@ -5,21 +5,21 @@ when asyncBackend == "chronos":
 else:
   import asyncdispatch
 
-import stringresize
+import ./stringresize
 
 type AsyncVein* = object
   buffer*: string
     ## buffer string, users need to access directly & keep track of position
-  bufferLoader*: proc (): Future[string]
+  bufferLoader*: proc (): Future[string] {.async.}
     ## loads a string at a time to add to the buffer when needed
     ## set to nil after returning empty string
   freeBefore*: int
     ## position before which we can cull the buffer
 
-proc initAsyncVein*(buffer: sink string = "", loader: proc (): Future[string] = nil): AsyncVein {.inline.} =
+proc initAsyncVein*(buffer: sink string = "", loader: proc (): Future[string] {.async.} = nil): AsyncVein {.inline.} =
   AsyncVein(buffer: buffer, bufferLoader: loader)
 
-proc initAsyncVein*(loader: proc (): Future[string]): AsyncVein {.inline.} =
+proc initAsyncVein*(loader: proc (): Future[string] {.async.}): AsyncVein {.inline.} =
   AsyncVein(buffer: "", bufferLoader: loader)
 
 proc setFreeBefore*(r: var AsyncVein, freeBefore: int) {.inline.} =

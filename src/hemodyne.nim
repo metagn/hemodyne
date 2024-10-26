@@ -1,2 +1,2 @@
-import hemodyne/vein
-export vein
+import hemodyne/[vein, artery]
+export vein, artery

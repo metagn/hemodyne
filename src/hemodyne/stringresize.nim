@@ -1,7 +1,7 @@
 when not declared(capacity):
   template capacity(s: string): int = high(int)
 
-proc smartResizeAdd*(s: var string, a: string, freeBefore: int): bool =
+proc smartResizeAdd*(s: var string, a: sink string, freeBefore: int): bool =
   ## adds `a` to `s`; if operation would result in resize, deletes characters
   ## before `freeBefore` and returns `true`, otherwise returns `false`
   let cap = s.capacity

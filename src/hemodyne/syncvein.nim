@@ -1,4 +1,4 @@
-import stringresize
+import ./stringresize
 
 type Vein* = object
   buffer*: string
