@@ -21,7 +21,7 @@ proc setFreeBefore*(r: var AsyncVein, freeBefore: int) {.inline.} =
 proc resetFreeBefore*(r: var AsyncVein) {.inline.} =
   r.freeBefore = 0
 
-proc extendBufferOne*(r: var AsyncVein): Future[int] {.async.} =
+proc loadBufferOne*(r: var AsyncVein): Future[int] {.async.} =
   result = 0
   if not r.bufferLoader.isNil:
     {.cast(gcsafe), cast(raises: []).}:
@@ -33,7 +33,7 @@ proc extendBufferOne*(r: var AsyncVein): Future[int] {.async.} =
         result = r.freeBefore
         r.freeBefore = 0
 
-proc extendBufferBy*(r: var AsyncVein, n: int): Future[int] {.async.} =
+proc loadBufferBy*(r: var AsyncVein, n: int): Future[int] {.async.} =
   result = 0
   var i = 0
   while not r.bufferLoader.isNil and i < n:
@@ -47,7 +47,7 @@ proc extendBufferBy*(r: var AsyncVein, n: int): Future[int] {.async.} =
         result = r.freeBefore
         r.freeBefore = 0
 
-proc extendBufferRuneStart*(r: var AsyncVein, c: char): Future[int] {.async.} =
+proc loadBufferRuneStart*(r: var AsyncVein, c: char): Future[int] {.async.} =
   result = 0
   let b = byte(c)
   if (b and 0b10000000) != 0:
@@ -64,4 +64,11 @@ proc extendBufferRuneStart*(r: var AsyncVein, c: char): Future[int] {.async.} =
       n = 5
     else:
       return
-    result = await extendBufferBy(r, n)
+    result = await loadBufferBy(r, n)
+
+proc extendBufferOne*(r: var AsyncVein): Future[int] {.inline.} =
+  result = loadBufferOne(r)
+proc extendBufferBy*(r: var AsyncVein, n: int): Future[int] {.inline.} =
+  result = loadBufferBy(r, n)
+proc extendBufferRuneStart*(r: var AsyncVein, c: char): Future[int] {.inline.} =
+  result = loadBufferRuneStart(r, c)

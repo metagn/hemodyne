@@ -23,7 +23,7 @@ proc setFreeBefore*(r: var Vein, freeBefore: int) {.inline.} =
 proc resetFreeBefore*(r: var Vein) {.inline.} =
   r.freeBefore = 0
 
-proc extendBufferOne*(r: var Vein): int {.inline.} =
+proc loadBufferOne*(r: var Vein): int {.inline.} =
   result = 0
   if not r.bufferLoader.isNil:
     let ex = r.bufferLoader()
@@ -34,7 +34,7 @@ proc extendBufferOne*(r: var Vein): int {.inline.} =
         result = r.freeBefore
         r.freeBefore = 0
 
-proc extendBufferBy*(r: var Vein, n: int): int {.inline.} =
+proc loadBufferBy*(r: var Vein, n: int): int {.inline.} =
   result = 0
   var i = 0
   while not r.bufferLoader.isNil and i < n:
@@ -47,7 +47,7 @@ proc extendBufferBy*(r: var Vein, n: int): int {.inline.} =
         result = r.freeBefore
         r.freeBefore = 0
 
-proc extendBufferRuneStart*(r: var Vein, c: char): int {.inline.} =
+proc loadBufferRuneStart*(r: var Vein, c: char): int {.inline.} =
   result = 0
   let b = byte(c)
   if (b and 0b10000000) != 0:
@@ -64,6 +64,13 @@ proc extendBufferRuneStart*(r: var Vein, c: char): int {.inline.} =
       n = 5
     else:
       return
-    result = extendBufferBy(r, n)
+    result = loadBufferBy(r, n)
+
+proc extendBufferOne*(r: var Vein): int {.inline.} =
+  result = loadBufferOne(r)
+proc extendBufferBy*(r: var Vein, n: int): int {.inline.} =
+  result = loadBufferBy(r, n)
+proc extendBufferRuneStart*(r: var Vein, c: char): int {.inline.} =
+  result = loadBufferRuneStart(r, c)
 
 {.pop.}
