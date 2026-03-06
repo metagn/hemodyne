@@ -19,14 +19,14 @@ proc setFreeAfter*(r: var AsyncArtery, freeAfter: int) {.inline.} =
 proc resetFreeAfter*(r: var AsyncArtery) {.inline.} =
   r.freeAfter = 0
 
-proc addToBuffer*(r: var AsyncArtery, s: sink string): int =
+proc addToBuffer*(r: var AsyncArtery, s: sink string): int {.inline.} =
   ## returns removed characters from start of buffer
   result = 0
   if smartResizeAdd(r.buffer, s, r.freeAfter):
     result = r.freeAfter
     r.freeAfter = 0
 
-proc addToBuffer*(r: var AsyncArtery, c: char): int =
+proc addToBuffer*(r: var AsyncArtery, c: char): int {.inline.} =
   ## returns removed characters from start of buffer
   result = 0
   if smartResizeAdd(r.buffer, [c], r.freeAfter):

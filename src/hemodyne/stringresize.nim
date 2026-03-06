@@ -3,19 +3,29 @@ import std/strbasics
 when not declared(capacity):
   template capacity(s: string): int = high(int)
 
-proc smartResizeAdd*(s: var string, a: openArray[char], freeBefore: int): bool =
+{.push checks: off, stacktrace: off.}
+
+proc smartResizeAdd*(s: var string, a: openArray[char], freeBefore: int): bool {.inline.} =
   ## adds `a` to `s`; if operation would result in resize, deletes characters
   ## before `freeBefore` and returns `true`, otherwise returns `false`
-  let cap = s.capacity
-  if s.len + a.len > cap:
-    let realSLen = s.len - freeBefore
-    if freeBefore != 0: # would make this noop
-      for i in 0 ..< realSLen:
-        s[i] = s[i + freeBefore]
-    s.setLen(realSLen + a.len)
-    for i in 0 ..< a.len:
-      s[i + realSLen] = a[i]
-    result = true
-  else:
+  when nimvm:
     s.add(a)
     result = false
+  else:
+    when not defined(nimscript) and not defined(js):
+      if freeBefore != 0 and s.len + a.len > s.capacity:
+        let realSLen = s.len - freeBefore
+        for i in 0 ..< realSLen:
+          s[i] = s[i + freeBefore]
+        s.setLen(realSLen + a.len)
+        for i in 0 ..< a.len:
+          s[i + realSLen] = a[i]
+        result = true
+      else:
+        s.add(a)
+        result = false
+    else:
+      s.add(a)
+      result = false
+
+{.push pop.}

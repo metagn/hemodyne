@@ -9,6 +9,8 @@ type Vein* = object
   freeBefore*: int
     ## position before which we can cull the buffer
 
+{.push checks: off, stacktrace: off.}
+
 proc initVein*(buffer: sink string = "", loader: proc (): string = nil): Vein {.inline.} =
   Vein(buffer: buffer, bufferLoader: loader)
 
@@ -21,7 +23,7 @@ proc setFreeBefore*(r: var Vein, freeBefore: int) {.inline.} =
 proc resetFreeBefore*(r: var Vein) {.inline.} =
   r.freeBefore = 0
 
-proc extendBufferOne*(r: var Vein): int =
+proc extendBufferOne*(r: var Vein): int {.inline.} =
   result = 0
   if not r.bufferLoader.isNil:
     let ex = r.bufferLoader()
@@ -32,7 +34,7 @@ proc extendBufferOne*(r: var Vein): int =
         result = r.freeBefore
         r.freeBefore = 0
 
-proc extendBufferBy*(r: var Vein, n: int): int =
+proc extendBufferBy*(r: var Vein, n: int): int {.inline.} =
   result = 0
   var i = 0
   while not r.bufferLoader.isNil and i < n:
@@ -45,7 +47,7 @@ proc extendBufferBy*(r: var Vein, n: int): int =
         result = r.freeBefore
         r.freeBefore = 0
 
-proc extendBufferRuneStart*(r: var Vein, c: char): int =
+proc extendBufferRuneStart*(r: var Vein, c: char): int {.inline.} =
   result = 0
   let b = byte(c)
   if (b and 0b10000000) != 0:
@@ -63,3 +65,5 @@ proc extendBufferRuneStart*(r: var Vein, c: char): int =
     else:
       return
     result = extendBufferBy(r, n)
+
+{.pop.}
