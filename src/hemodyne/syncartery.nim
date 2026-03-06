@@ -40,7 +40,7 @@ proc flushBufferOnce*(r: var Artery, since: int): int =
     if result == 0:
       r.bufferConsumer = nil
   else:
-    result = r.buffer.len - since
+    result = 0
 
 proc flushBuffer*(r: var Artery, since: int): int =
   ## returns number of flushed characters

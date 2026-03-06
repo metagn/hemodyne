@@ -40,7 +40,7 @@ proc flushBufferOnce*(r: var AsyncArtery, since: int): Future[int] {.async.} =
     if result == 0:
       r.bufferConsumer = nil
   else:
-    result = r.buffer.len - since
+    result = 0
 
 proc flushBuffer*(r: var AsyncArtery, since: int): Future[int] {.async.} =
   ## returns number of flushed characters
