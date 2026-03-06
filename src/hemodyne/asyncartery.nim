@@ -1,16 +1,10 @@
-const asyncBackend {.strdefine.} = ""
-
-when asyncBackend == "chronos":
-  import chronos
-else:
-  import asyncdispatch
-
-import ./stringresize
+import ./stringresize, lib/asyncwrapper
 
 type AsyncArtery* = object
   buffer*: string
   bufferConsumer*: proc (x: openArray[char]): Future[int] {.async.}
     ## returns number of characters consumed
+    ## assumed that something is wrong if 0 characters consumed
   freeAfter*: int
 
 proc initAsyncArtery*(buffer: sink string = "", consumer: proc (x: openArray[char]): Future[int] {.async.} = nil): AsyncArtery {.inline.} =
@@ -25,53 +19,41 @@ proc setFreeAfter*(r: var AsyncArtery, freeAfter: int) {.inline.} =
 proc resetFreeAfter*(r: var AsyncArtery) {.inline.} =
   r.freeAfter = 0
 
-proc writeBuffer*(r: var AsyncArtery, s: sink string): int =
-  ## returns shift to buffer position, can be negative
-  result = s.len
+proc addToBuffer*(r: var AsyncArtery, s: sink string): int =
+  ## returns removed characters from start of buffer
+  result = 0
   if smartResizeAdd(r.buffer, s, r.freeAfter):
-    result -= r.freeAfter
+    result = r.freeAfter
+    r.freeAfter = 0
 
-proc flushBufferOne*(r: var AsyncArtery) {.async.} =
+proc addToBuffer*(r: var AsyncArtery, c: char): int =
+  ## returns removed characters from start of buffer
+  result = 0
+  if smartResizeAdd(r.buffer, [c], r.freeAfter):
+    result = r.freeAfter
+    r.freeAfter = 0
+
+proc flushBufferOnce*(r: var AsyncArtery, since: int): Future[int] {.async.} =
+  ## returns number of flushed characters
   if not r.bufferConsumer.isNil:
-    let ex = await r.bufferConsumer(r.buffer.toOpenArray(r.freeAfter, r.buffer.len - 1))
-    if ex == 0:
+    result = await r.bufferConsumer(r.buffer.toOpenArray(since, r.buffer.len - 1))
+    if result == 0:
       r.bufferConsumer = nil
-    else:
-      r.freeAfter += ex
+  else:
+    result = r.buffer.len - since
 
-proc flushBufferBy*(r: var AsyncArtery, n: int) {.async.} =
-  var i = 0
-  while not r.bufferConsumer.isNil and i < n:
-    let ex = await r.bufferConsumer(r.buffer.toOpenArray(r.freeAfter, r.buffer.len - 1))
+proc flushBuffer*(r: var AsyncArtery, since: int) {.async.} =
+  var since = since
+  while since < r.buffer.len:
+    let ex = await flushBufferOnce(r, since)
     if ex == 0:
-      r.bufferConsumer = nil
+      break
     else:
-      i += ex
-      r.freeAfter += ex
+      since += ex
 
-proc flushBufferRuneStart*(r: var AsyncArtery, c: char) {.async.} =
-  let b = byte(c)
-  if (b and 0b10000000) != 0:
-    var n = 0
-    if b shr 5 == 0b110:
-      n = 1
-    elif b shr 4 == 0b1110:
-      n = 2
-    elif b shr 3 == 0b11110:
-      n = 3
-    elif b shr 2 == 0b111110:
-      n = 4
-    elif b shr 1 == 0b1111110:
-      n = 5
-    else:
-      return
-    await flushBufferBy(r, n)
-
-proc flushBufferAll*(r: var AsyncArtery) {.async.} =
-  while not r.bufferConsumer.isNil:
-    let ex = await r.bufferConsumer(r.buffer.toOpenArray(r.freeAfter, r.buffer.len - 1))
-    if ex == 0:
-      r.bufferConsumer = nil
-      return
-    else:
-      r.freeAfter += ex
+proc flushBufferFull*(r: var AsyncArtery, since: int) {.async.} =
+  await flushBuffer(r, since)
+  if not r.bufferConsumer.isNil:
+    let ex = await r.bufferConsumer([])
+    discard ex # unused
+    r.bufferConsumer = nil

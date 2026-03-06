@@ -1,11 +1,4 @@
-const asyncBackend {.strdefine.} = ""
-
-when asyncBackend == "chronos":
-  import chronos
-else:
-  import asyncdispatch
-
-import ./stringresize
+import ./stringresize, lib/asyncwrapper
 
 type AsyncVein* = object
   buffer*: string
