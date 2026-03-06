@@ -42,17 +42,20 @@ proc flushBufferOnce*(r: var Artery, since: int): int =
   else:
     result = r.buffer.len - since
 
-proc flushBuffer*(r: var Artery, since: int) =
-  var since = since
-  while since < r.buffer.len:
-    let ex = flushBufferOnce(r, since)
+proc flushBuffer*(r: var Artery, since: int): int =
+  ## returns number of flushed characters
+  var pos = since
+  while pos < r.buffer.len:
+    let ex = flushBufferOnce(r, pos)
     if ex == 0:
       break
     else:
-      since += ex
+      pos += ex
+  result = pos - since
 
-proc flushBufferFull*(r: var Artery, since: int) =
-  flushBuffer(r, since)
+proc flushBufferFull*(r: var Artery, since: int): int =
+  ## returns number of flushed characters
+  result = flushBuffer(r, since)
   if not r.bufferConsumer.isNil:
     let ex = r.bufferConsumer([])
     discard ex # unused

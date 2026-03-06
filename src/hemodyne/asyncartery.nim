@@ -42,17 +42,20 @@ proc flushBufferOnce*(r: var AsyncArtery, since: int): Future[int] {.async.} =
   else:
     result = r.buffer.len - since
 
-proc flushBuffer*(r: var AsyncArtery, since: int) {.async.} =
-  var since = since
-  while since < r.buffer.len:
+proc flushBuffer*(r: var AsyncArtery, since: int): Future[int] {.async.} =
+  ## returns number of flushed characters
+  var pos = since
+  while pos < r.buffer.len:
     let ex = await flushBufferOnce(r, since)
     if ex == 0:
       break
     else:
-      since += ex
+      pos += ex
+  result = pos - since
 
 proc flushBufferFull*(r: var AsyncArtery, since: int) {.async.} =
-  await flushBuffer(r, since)
+  ## returns number of flushed characters
+  result = await flushBuffer(r, since)
   if not r.bufferConsumer.isNil:
     let ex = await r.bufferConsumer([])
     discard ex # unused
