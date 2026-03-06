@@ -53,7 +53,7 @@ proc flushBuffer*(r: var AsyncArtery, since: int): Future[int] {.async.} =
       pos += ex
   result = pos - since
 
-proc flushBufferFull*(r: var AsyncArtery, since: int) {.async.} =
+proc flushBufferFull*(r: var AsyncArtery, since: int): Future[int] {.async.} =
   ## returns number of flushed characters
   result = await flushBuffer(r, since)
   if not r.bufferConsumer.isNil:
