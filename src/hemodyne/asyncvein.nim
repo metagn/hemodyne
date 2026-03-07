@@ -15,6 +15,25 @@ proc initAsyncVein*(buffer: sink string = "", loader: proc (): Future[string] {.
 proc initAsyncVein*(loader: proc (): Future[string] {.async.}): AsyncVein {.inline.} =
   AsyncVein(buffer: "", bufferLoader: loader)
 
+when declared(asyncstreams):
+  proc initAsyncVein*(stream: FutureStream[string]): AsyncVein {.inline.} =
+    AsyncVein(buffer: newStringOfCap(64), bufferLoader: proc (): Future[string] {.async.} =
+      let (success, data) = await read(stream)
+      if success:
+        result = data
+      else:
+        result = "")
+
+  proc initAsyncVein*(stream: FutureStream[char], loadAmount = 4): AsyncVein {.inline.} =
+    AsyncVein(buffer: newStringOfCap(64), bufferLoader: proc (): Future[string] {.async.} =
+      result = ""
+      while result.len < loadAmount:
+        let (success, data) = await read(stream)
+        if success:
+          result.add data
+        else:
+          return)
+
 proc setFreeBefore*(r: var AsyncVein, freeBefore: int) {.inline.} =
   r.freeBefore = freeBefore
 

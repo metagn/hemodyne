@@ -1,4 +1,4 @@
-import ./stringresize
+import ./stringresize, std/streams
 
 type Artery* = object
   buffer*: string
@@ -7,13 +7,24 @@ type Artery* = object
     ## assumed that something is wrong if 0 characters consumed
   freeBefore*: int
 
-{.push checks: off, stacktrace: off.}
-
 proc initArtery*(buffer: sink string = "", consumer: proc (x: openArray[char]): int = nil): Artery {.inline.} =
   Artery(buffer: buffer, bufferConsumer: consumer)
 
 proc initArtery*(consumer: proc (x: openArray[char]): int): Artery {.inline.} =
   Artery(buffer: "", bufferConsumer: consumer)
+
+proc initArtery*(stream: Stream): Artery {.inline.} =
+  Artery(buffer: newStringOfCap(64), bufferConsumer: proc (x: openArray[char]): int =
+    when defined(js) or defined(nimscript):
+      var s = newString(x.len)
+      for i in 0 ..< x.len:
+        s[i] = x[i]
+      stream.write(s)
+    else:
+      stream.write(x)
+    result = x.len)
+
+{.push checks: off, stacktrace: off.}
 
 proc setFreeBefore*(r: var Artery, freeBefore: int) {.inline.} =
   r.freeBefore = freeBefore

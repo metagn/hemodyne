@@ -1,4 +1,4 @@
-import ./stringresize
+import ./stringresize, std/streams
 
 type Vein* = object
   buffer*: string
@@ -9,13 +9,17 @@ type Vein* = object
   freeBefore*: int
     ## position before which we can cull the buffer
 
-{.push checks: off, stacktrace: off.}
-
 proc initVein*(buffer: sink string = "", loader: proc (): string = nil): Vein {.inline.} =
   Vein(buffer: buffer, bufferLoader: loader)
 
 proc initVein*(loader: proc (): string): Vein {.inline.} =
-  Vein(buffer: "", bufferLoader: loader)
+  Vein(buffer: newStringOfCap(64), bufferLoader: loader)
+
+proc initVein*(stream: Stream, loadAmount = 4): Vein {.inline.} =
+  Vein(buffer: newStringOfCap(64), bufferLoader: proc (): string =
+    readStr(stream, loadAmount))
+
+{.push checks: off, stacktrace: off.}
 
 proc setFreeBefore*(r: var Vein, freeBefore: int) {.inline.} =
   r.freeBefore = freeBefore

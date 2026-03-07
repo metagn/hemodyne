@@ -13,6 +13,21 @@ proc initAsyncArtery*(buffer: sink string = "", consumer: proc (x: openArray[cha
 proc initAsyncArtery*(consumer: proc (x: openArray[char]): Future[int] {.async.}): AsyncArtery {.inline.} =
   AsyncArtery(buffer: "", bufferConsumer: consumer)
 
+when declared(asyncstreams):
+  proc initAsyncArtery*(stream: FutureStream[string]): AsyncArtery {.inline.} =
+    ## warning: has to copy a new string every time due to how `FutureStream` works unlike char version
+    AsyncArtery(buffer: newStringOfCap(64), bufferConsumer: proc (x: openArray[char]): Future[int] {.async.} =
+      var s = newString(x.len)
+      for i in 0 ..< x.len:
+        s[i] = x[i]
+      await stream.write(s)
+      result = x.len)
+  proc initAsyncArtery*(stream: FutureStream[char]): AsyncArtery {.inline.} =
+    AsyncArtery(buffer: newStringOfCap(64), bufferConsumer: proc (x: openArray[char]): Future[int] {.async.} =
+      for c in x:
+        await stream.write(c)
+      result = x.len)
+
 proc setFreeBefore*(r: var AsyncArtery, freeBefore: int) {.inline.} =
   r.freeBefore = freeBefore
 
